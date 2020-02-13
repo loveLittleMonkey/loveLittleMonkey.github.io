@@ -15,6 +15,126 @@
             <li>压缩混淆</li>
             <li>图片压缩</li>
         </ol>
+        <li>基本例子</li>
+        Webpack 脚本
+        <code>
+            <pre>const path = require('path');
+module.exports = {
+    mode: 'production',
+    entry: './src/index.js',
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'bundle.js'
+    }
+};</pre>  
+        </code>
+        构建结果
+        <code>
+<pre><xmp><!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>webpack</title>
+</head>
+<body>
+    <script src="dist/bundle.js"></script>
+</body>
+</html></xmp></pre>
+        </code>
+        <li>webpack执行过程</li>
+        <ol>
+            <img src="./build_more_faster_image1.png" alt="">
+        </ol>
+        <li>webpack与其他打包脚本 Grunt 和 Gulp 的区别</li>
+        <li>如何分析页面打包中的问题</li>
+        <ol>
+            <li>初级分析：使用webpack内置的stats</li>
+            <ul>
+                <li>无法知道哪一步比较耗时</li>
+                <li>那些资源占的体积比较大</li>
+            </ul>
+            <li>升级版 - 速度分析 - 使用speed-measure-webpack-plugin</li>
+            <ul>
+                <li>优化策略</li>
+                <ol>
+                    <li>使用webpack4</li>
+                        <ul>
+                            <li>V8带来的优化( for of 替代 forEach, Map 和 Set 替代Object, includes 替换 indexOf )</li>
+                            <li>默认使用更快的md4 hash算法( 原来是md5 )</li>
+                            <li>webpacks AST 可以直接从 loader 传递给 AST, 减少解析时间</li>
+                            <li>使用字符串方法替换正则表达式</li>
+                        </ul>
+                    <li>多线程/多实例构建</li>
+                        <ul>
+                            <li>资源并行解析可选方案</li>
+                            <ol>
+                                <li>thread-loader</li>
+                                <li>parallel-webpack</li>
+                                <li>HappyPack</li>
+                            </ol>
+                            <li>并行压缩</li>
+                            <ol>
+                                <li>使用 parallel-uglify-plugin 插件 ( webpack3.0 )</li>
+                                <li>uglifyjs-webpack-plugin 开启 parallel 参数 ( webpack4.0 ) </li>
+                            </ol>
+                        </ul>
+                    <li>分包</li>
+                        <ul>
+                            <li>设置Externals,如react、react-dom等基础包通过cdn引入</li>
+                            <li>预编译资源模块</li>
+                            <ol>
+                                <li>将基础包和业务基础包打包成一个文件</li>
+                                <li>(动态链接库)方法：使用DLLPlugin进行分包，DllReferencePlugin对manifest.json引用</li>
+                            </ol>
+                        </ul>
+                    <li>缓存</li>
+                        <ul>
+                            <li>目的是提升二次构建的速度</li>
+                            <li>使用 HardSourceWebpackPlugin 或者 cache-loader</li>
+                        </ul>
+                    <li>缩小构建目标</li>
+                        <ul>
+                            <li>目的是尽可能少构建模块</li>
+                            <li>比如 bebel-loader 不解析 node_modules</li>
+                        </ul>
+                </ol>
+            </ul>
+            <li>升级版 - 体积分析 - 使用webpack-bundle-analyzer</li>
+            <ul>
+                <li>优化策略</li>
+                <ol>
+                    <li>Scope Hoisting</li>
+                        <ul>
+                            <li>未使用的现象是，构建后的代码存在大量重复的闭包代码</li>
+                            <li>实现原理是，将所有模块的代码按照引用顺序放在一个函数作用域里，然后适当的重命名一些变量以防止变量名冲突</li>
+                            <li>通过 scope hoisting 可以减少函数声明代码</li>
+                            <li>webpack内置插件可以实现，webpack.optimize.ModuleConcatenationPlugin</li>
+                            <li>要求是，需要是ES6的语法，CJS的方式不支持 (静态模块的方法，动态模块的不支持) </li>
+                        </ul>
+                    <li>Tree-shaking</li>
+                        <ul>
+                            <li>概念：1个模块内可能有多个方案，只要其中的某个方法使用到了，则整个文件都会被打到bundle里面去，Tree-shaking就是只把使用到的方法打入bundle，没用到的方法会在uglify阶段被擦除掉</li>
+                            <li>使用：webpack默认支持，在 .babelrc 里设置 modules:false </li>
+                            <li>要求：需要是ES6的语法，CJS的方式不支持</li>
+                        </ul>
+                    <li>公共资源分离</li>
+                        <ul>
+                            <li>目的：提取多个页面公共JS chunk代码</li>
+                            <li>webpack3: CommonsChunkPlugin</li>
+                            <li>webpack4: SplitChunksPlugin</li>
+
+                        </ul>
+                    <li>图片压缩</li>
+                        <ul>
+                            <li>要求：基于 node 库的 imagemin 或者 tinypng API (需要请求服务器)</li>
+                            <li>使用：配置 image-webpack-loader</li>
+                        </ul>
+                    <li>动态Polyfill</li>
+                </ol>
+            </ul>
+        </ol>
     </ul>
+
+    <a href="https://ke.qq.com/course/364243?taid=2852313551441619">参考：【NEXT公开课】Webpack打包极限优化</a><br>
+    <a href="https://github.com/cpselvis">讲师 github</a>
 </body>
 </html>
